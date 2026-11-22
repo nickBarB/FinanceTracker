@@ -1,0 +1,84 @@
+package model;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import service.ValidationException;
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.NullAndEmptySource;
+import org.junit.jupiter.params.provider.ValueSource;
+
+class OperationTest {
+
+    private static final LocalDate TODAY = LocalDate.of(2020, 1, 5);
+
+    private static Operation expense(String category, BigDecimal amount, LocalDate date) {
+        return new Operation(OperationType.EXPENSE, category, amount, date, null, null);
+    }
+
+    @Test
+    void createsValidOperationWithTwoDecimals() {
+        Operation op = expense("  Еда ", new BigDecimal("300"), TODAY);
+
+        assertEquals(OperationType.EXPENSE, op.type());
+        assertEquals("Еда", op.category());
+        assertEquals("", op.description());
+        assertFalse(op.isTransfer());
+        assertEquals(new BigDecimal("300.00"), op.amount());
+        assertEquals(TODAY, op.date());
+    }
+
+    @ParameterizedTest
+    @NullAndEmptySource
+    @ValueSource(strings = {" "})
+    void rejectsBlankCategory(String category) {
+        assertThrows(ValidationException.class, () -> expense(category, BigDecimal.TEN, TODAY));
+    }
+
+    @Test
+    void rejectsNullType() {
+        assertThrows(ValidationException.class,
+                () -> new Operation(null, "Еда", BigDecimal.TEN, TODAY, null, null));
+    }
+
+    @Test
+    void rejectsNullDate() {
+        assertThrows(ValidationException.class,
+                () -> expense("Еда", BigDecimal.TEN, null));
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"0", "-1"})
+    void rejectsNonPositiveAmount(String amount) {
+        assertThrows(ValidationException.class,
+                () -> expense("Еда", new BigDecimal(amount), TODAY));
+    }
+
+    @Test
+    void modelDoesNotDependOnSystemClock() {
+        LocalDate date = LocalDate.of(2099, 1, 1);
+        assertEquals(date, expense("Еда", BigDecimal.TEN, date).date());
+    }
+
+    @Test
+    void operationWithCounterpartyIsTransfer() {
+        Operation op = new Operation(
+                OperationType.EXPENSE, "Перевод", BigDecimal.TEN, TODAY, "", "boris");
+
+        assertTrue(op.isTransfer());
+    }
+
+    @Test
+    void blankCounterpartyBecomesNull() {
+        Operation op = new Operation(
+                OperationType.INCOME, "Зарплата", BigDecimal.TEN, TODAY, null, "  ");
+
+        assertNull(op.counterparty());
+    }
+}
