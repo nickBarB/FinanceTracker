@@ -27,7 +27,7 @@ class WalletEditingTest {
 
     private static Operation expense(String category, String amount) {
         return new Operation(OperationType.EXPENSE, category, new BigDecimal(amount),
-                LocalDate.now(), null, null);
+                LocalDate.of(2020, 1, 5), null, null);
     }
 
     private List<String> categoryNames() {

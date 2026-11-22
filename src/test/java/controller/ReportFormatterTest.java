@@ -22,7 +22,7 @@ class ReportFormatterTest {
 
     @BeforeEach
     void setUp() {
-        SampleData.fillAssignmentExample(wallet);
+        support.FinancialFixtures.populate(wallet);
     }
 
     private String report(OperationFilter filter, boolean withAlerts) {

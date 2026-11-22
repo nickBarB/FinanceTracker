@@ -16,7 +16,7 @@ import org.junit.jupiter.api.Test;
 
 class ImportServiceTest {
 
-    private final ImportService service = new ImportService();
+    private final ImportService service = new ImportService(support.TestClock.CLOCK);
     private final Wallet wallet = new Wallet("anna");
 
     private static Operation op(String category, String amount) {

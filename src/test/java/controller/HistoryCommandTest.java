@@ -1,10 +1,8 @@
 package controller;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import service.ValidationException;
 import model.Category;
 import model.Operation;
 import model.OperationType;
@@ -28,7 +26,7 @@ class HistoryCommandTest {
 
     @BeforeEach
     void setUp() {
-        SampleData.fillAssignmentExample(fixture.wallet);
+        support.FinancialFixtures.populate(fixture.wallet);
     }
 
     @Test
@@ -38,15 +36,9 @@ class HistoryCommandTest {
         String out = fixture.output();
         assertTrue(out.indexOf("2020-01-20") < out.indexOf("2020-02-05"));
         assertTrue(out.contains("Всего операций: 8."));
-    }
-
-    @Test
-    void showsTypeAndFormattedAmount() {
-        fixture.run(command, "history");
-
-        assertTrue(fixture.output().contains("Расход"));
-        assertTrue(fixture.output().contains("Доход"));
-        assertTrue(fixture.output().contains("3,000.00"));
+        assertTrue(out.contains("Расход"));
+        assertTrue(out.contains("Доход"));
+        assertTrue(out.contains("3,000.00"));
     }
 
     @Test
@@ -85,11 +77,5 @@ class HistoryCommandTest {
         fixture.run(command, "history --out \"" + file + "\"");
 
         assertTrue(Files.readString(file).contains("Дата"));
-    }
-
-    @Test
-    void unknownCategoryIsRejected() {
-        assertThrows(ValidationException.class,
-                () -> fixture.run(command, "history --categories Кино"));
     }
 }

@@ -1,9 +1,13 @@
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import libs.storage.StorageException;
+import repository.json.JsonStorage;
+import repository.json.JsonWalletRepository;
+import java.math.BigDecimal;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -29,13 +33,14 @@ class ApplicationTest {
     private String run(String... lines) {
         String input = String.join("\n", lines) + "\n";
         ByteArrayOutputStream out = new ByteArrayOutputStream();
-        new Application(dataDir, 1000)
+        new Application(new config.ApplicationConfig(dataDir.resolve("finance.json"), tempDir.resolve("logs"), 1000),
+                support.TestClock.CLOCK)
                 .run(new ByteArrayInputStream(input.getBytes(StandardCharsets.UTF_8)), out);
         return out.toString(StandardCharsets.UTF_8);
     }
 
     @Test
-    void assignmentExampleThroughTheCommandLine() {
+    void completeSessionReportsIncomeExpensesAndBudgets() {
         String out = run(
                 "register", "anna", "secret1",
                 "add-category Еда", "add-category Развлечения",
@@ -56,7 +61,6 @@ class ApplicationTest {
         assertTrue(out.contains("-500.00"));
         assertTrue(out.contains("Превышен бюджет «Коммунальные услуги»"));
         assertTrue(Files.exists(dataDir.resolve("finance.json")));
-        assertTrue(Files.exists(dataDir.resolve("finance.json")));
     }
 
     @Test
@@ -69,6 +73,32 @@ class ApplicationTest {
         assertTrue(out.contains("Баланс: 100.00"));
         assertTrue(out.contains("Зарплата"));
         assertTrue(out.contains("Всего операций: 1."));
+    }
+
+    @Test
+    void categoryAndBudgetEditsSurviveRestart() {
+        run("register", "anna", "secret1", "add-category Еда", "add-category Такси",
+            "add-category Временная", "set-budget Еда 4000", "add-expense Еда 300",
+            "rename-category Еда Продукты", "set-budget Продукты 5000",
+            "remove-category Временная", "exit");
+
+        try (var storage = new JsonStorage(dataDir.resolve("finance.json"))) {
+            var wallet = new JsonWalletRepository(storage).findByOwner("anna").orElseThrow();
+            assertTrue(wallet.hasCategory("Продукты"));
+            assertFalse(wallet.hasCategory("Еда"));
+            assertFalse(wallet.hasCategory("Временная"));
+            assertEquals("Продукты", wallet.getOperations().get(0).category());
+            assertEquals(new BigDecimal("5000.00"),
+                wallet.getBudget("Продукты").orElseThrow().limit());
+        }
+
+        run("login", "anna", "secret1", "remove-budget Продукты", "remove-category Такси", "exit");
+        try (var storage = new JsonStorage(dataDir.resolve("finance.json"))) {
+            var wallet = new JsonWalletRepository(storage).findByOwner("anna").orElseThrow();
+            assertTrue(wallet.getBudgets().isEmpty());
+            assertFalse(wallet.hasCategory("Такси"));
+            assertEquals(1, wallet.getOperations().size());
+        }
     }
 
     @Test
@@ -131,13 +161,14 @@ class ApplicationTest {
     @Test
     void jsonSnapshotMovesBetweenUsers() {
         Path backup = tempDir.resolve("backup.json");
-        run("register", "anna", "secret1", "add-category Зарплата",
-                "add-income Зарплата 1000", "export \"" + backup + "\"", "exit");
+        run("register", "anna", "secret1", "add-category Зарплата", "add-category Еда",
+                "set-budget Еда 4000", "add-income Зарплата 1000", "export \"" + backup + "\"", "exit");
 
         String out = run("register", "boris", "secret2", "import \"" + backup + "\"",
                 "report", "exit");
 
-        assertTrue(out.contains("Созданы категории: Зарплата."));
+        assertTrue(out.contains("Созданы категории: Зарплата, Еда."));
+        assertTrue(out.contains("4,000.00"));
         assertTrue(out.contains("Общий доход: 1,000.00"));
     }
 

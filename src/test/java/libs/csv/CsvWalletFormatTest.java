@@ -23,7 +23,7 @@ class CsvWalletFormatTest {
 
     private static final String HEADER = "date,type,category,amount,description,counterparty";
 
-    private final CsvWalletFormat format = new CsvWalletFormat();
+    private final CsvWalletFormat format = new CsvWalletFormat(support.TestClock.CLOCK);
 
     private static Wallet wallet() {
         Wallet wallet = new Wallet("anna");

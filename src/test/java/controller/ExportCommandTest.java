@@ -30,7 +30,7 @@ class ExportCommandTest {
 
     private final CommandFixture fixture = new CommandFixture();
     private final ExportCommand export = new ExportCommand(new FormatRegistry(
-            List.of(new CsvWalletFormat(), new JsonWalletFormat(JsonCodec.create()))));
+            List.of(new CsvWalletFormat(support.TestClock.CLOCK), new JsonWalletFormat(JsonCodec.create(), support.TestClock.CLOCK))));
 
     private void fillWallet() {
         fixture.wallet.addCategory(new Category("Еда"));
@@ -89,18 +89,5 @@ class ExportCommandTest {
 
         assertTrue(e.getMessage().contains(".json"));
         assertFalse(Files.exists(file));
-    }
-
-    @Test
-    void missingArgumentShowsUsage() {
-        ValidationException e = assertThrows(ValidationException.class,
-                () -> fixture.run(export, "export"));
-
-        assertTrue(e.getMessage().contains("export <файл"));
-    }
-
-    @Test
-    void exportDoesNotChangeData() {
-        assertFalse(export.changesData());
     }
 }

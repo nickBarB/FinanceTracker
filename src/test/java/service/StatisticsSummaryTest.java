@@ -5,8 +5,6 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import model.Budget;
-import model.Category;
 import model.Operation;
 import model.OperationType;
 import model.Wallet;
@@ -26,26 +24,7 @@ class StatisticsSummaryTest {
     @BeforeEach
     void setUp() {
         service = new StatisticsService();
-        wallet = new Wallet("anna");
-        for (String name : new String[] {
-                "Еда", "Развлечения", "Коммунальные услуги", "Такси", "Зарплата", "Бонус"}) {
-            wallet.addCategory(new Category(name));
-        }
-        add(OperationType.EXPENSE, "Еда", "300", d(1, 5));
-        add(OperationType.EXPENSE, "Еда", "500", d(2, 5));
-        add(OperationType.EXPENSE, "Развлечения", "3000", d(1, 20));
-        add(OperationType.EXPENSE, "Коммунальные услуги", "3000", d(2, 10));
-        add(OperationType.EXPENSE, "Такси", "1500", d(2, 20));
-        add(OperationType.INCOME, "Зарплата", "20000", d(1, 1));
-        add(OperationType.INCOME, "Зарплата", "40000", d(2, 1));
-        add(OperationType.INCOME, "Бонус", "3000", d(2, 15));
-        wallet.setBudget(new Budget("Еда", money("4000")));
-        wallet.setBudget(new Budget("Развлечения", money("3000")));
-        wallet.setBudget(new Budget("Коммунальные услуги", money("2500")));
-    }
-
-    private void add(OperationType type, String category, String amount, LocalDate date) {
-        wallet.addOperation(new Operation(type, category, new BigDecimal(amount), date, null, null));
+        wallet = support.FinancialFixtures.wallet("anna");
     }
 
     private static LocalDate d(int month, int day) {
@@ -57,7 +36,7 @@ class StatisticsSummaryTest {
     }
 
     @Test
-    void summaryMatchesAssignmentExample() {
+    void summaryGroupsIncomeAndExpenses() {
         Summary summary = service.summarize(wallet, OperationFilter.all());
 
         assertEquals(money("63000.00"), summary.totalIncome());
@@ -128,7 +107,8 @@ class StatisticsSummaryTest {
 
     @Test
     void operationCategoryCaseDoesNotSplitGroups() {
-        add(OperationType.EXPENSE, "еда", "100", d(3, 1));
+        wallet.addOperation(new Operation(OperationType.EXPENSE, "еда", new BigDecimal("100"),
+            d(3, 1), null, null));
 
         Summary summary = service.summarize(wallet, OperationFilter.all());
 

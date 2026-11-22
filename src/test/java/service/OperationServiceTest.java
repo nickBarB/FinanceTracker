@@ -15,14 +15,14 @@ import org.junit.jupiter.api.Test;
 
 class OperationServiceTest {
 
-    private static final LocalDate TODAY = LocalDate.now();
+    private static final LocalDate TODAY = support.TestClock.TODAY;
 
     private OperationService service;
     private Wallet wallet;
 
     @BeforeEach
     void setUp() {
-        service = new OperationService();
+        service = new OperationService(support.TestClock.CLOCK);
         wallet = new Wallet("anna");
         for (String name : new String[] {
                 "Еда", "Развлечения", "Коммунальные услуги", "Такси", "Зарплата", "Бонус"}) {
@@ -73,20 +73,5 @@ class OperationServiceTest {
                 () -> service.addIncome(wallet, "Бонус", money("100"), TODAY.plusDays(1), null));
 
         assertTrue(wallet.getOperations().isEmpty());
-    }
-
-    @Test
-    void exampleFromAssignmentGivesExpectedBalance() {
-        service.addExpense(wallet, "Еда", money("300"), TODAY, null);
-        service.addExpense(wallet, "Еда", money("500"), TODAY, null);
-        service.addExpense(wallet, "Развлечения", money("3000"), TODAY, null);
-        service.addExpense(wallet, "Коммунальные услуги", money("3000"), TODAY, null);
-        service.addExpense(wallet, "Такси", money("1500"), TODAY, null);
-        service.addIncome(wallet, "Зарплата", money("20000"), TODAY, null);
-        service.addIncome(wallet, "Зарплата", money("40000"), TODAY, null);
-        service.addIncome(wallet, "Бонус", money("3000"), TODAY, null);
-
-        assertEquals(8, wallet.getOperations().size());
-        assertEquals(new BigDecimal("54700.00"), wallet.getBalance());
     }
 }

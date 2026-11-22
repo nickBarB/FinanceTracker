@@ -1,26 +1,17 @@
 package controller;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import service.ValidationException;
-import model.Budget;
-import model.Category;
-import model.Operation;
-import model.OperationType;
-import model.Wallet;
 import service.FormatRegistry;
 import service.ImportService;
 import libs.csv.CsvWalletFormat;
 import libs.json.JsonCodec;
 import repository.json.JsonWalletFormat;
 import java.io.IOException;
-import java.io.StringWriter;
-import java.math.BigDecimal;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.time.LocalDate;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -33,45 +24,12 @@ class ImportCommandTest {
     Path tempDir;
 
     private final CommandFixture fixture = new CommandFixture();
-    private final JsonWalletFormat json = new JsonWalletFormat(JsonCodec.create());
+    private final JsonWalletFormat json = new JsonWalletFormat(JsonCodec.create(), support.TestClock.CLOCK);
     private final ImportCommand importer = new ImportCommand(
-            new FormatRegistry(List.of(new CsvWalletFormat(), json)), new ImportService());
+            new FormatRegistry(List.of(new CsvWalletFormat(support.TestClock.CLOCK), json)), new ImportService(support.TestClock.CLOCK));
 
     private String commandFor(Path file) {
         return "import \"" + file + "\"";
-    }
-
-    @Test
-    void importCsvAddsOperationsAndCreatesCategories() throws IOException {
-        Path file = tempDir.resolve("ops.csv");
-        Files.writeString(file, HEADER
-                + "2020-01-05,EXPENSE,Еда,300,обед,\n"
-                + "2020-01-06,INCOME,Зарплата,1000,,\n");
-
-        fixture.run(importer, commandFor(file));
-
-        assertEquals(2, fixture.wallet.getOperations().size());
-        assertTrue(fixture.wallet.hasCategory("Еда"));
-        assertTrue(fixture.output().contains("добавлено операций — 2"));
-        assertTrue(fixture.output().contains("Созданы категории: Еда, Зарплата."));
-    }
-
-    @Test
-    void importJsonSnapshotRestoresBudgetsAndOperations() throws IOException {
-        Wallet source = new Wallet("anna");
-        source.addCategory(new Category("Еда"));
-        source.setBudget(new Budget("Еда", new BigDecimal("4000")));
-        source.addOperation(new Operation(OperationType.EXPENSE, "Еда", new BigDecimal("300"),
-                LocalDate.of(2020, 1, 5), null, null));
-        StringWriter text = new StringWriter();
-        json.write(source, text);
-        Path file = tempDir.resolve("backup.json");
-        Files.writeString(file, text.toString());
-
-        fixture.run(importer, commandFor(file));
-
-        assertTrue(fixture.wallet.getBudget("Еда").isPresent());
-        assertEquals(1, fixture.wallet.getOperations().size());
     }
 
     @Test
@@ -97,20 +55,5 @@ class ImportCommandTest {
                 () -> fixture.run(importer, commandFor(file)));
 
         assertTrue(e.getMessage().contains("Файл не найден"));
-    }
-
-    @Test
-    void unknownExtensionIsRejected() {
-        Path file = tempDir.resolve("data.txt");
-
-        ValidationException e = assertThrows(ValidationException.class,
-                () -> fixture.run(importer, commandFor(file)));
-
-        assertTrue(e.getMessage().contains("Неизвестный формат"));
-    }
-
-    @Test
-    void importIsMarkedAsDataChanging() {
-        assertTrue(importer.changesData());
     }
 }

@@ -1,4 +1,4 @@
-package controller;
+package support;
 
 import model.Budget;
 import model.Category;
@@ -8,12 +8,12 @@ import model.Wallet;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
-final class SampleData {
+public final class FinancialFixtures {
 
-    private SampleData() {
+    private FinancialFixtures() {
     }
 
-    static void fillAssignmentExample(Wallet wallet) {
+    public static void populate(Wallet wallet) {
         for (String name : new String[] {
                 "Еда", "Развлечения", "Коммунальные услуги", "Такси", "Зарплата", "Бонус"}) {
             wallet.addCategory(new Category(name));
@@ -29,6 +29,12 @@ final class SampleData {
         wallet.setBudget(new Budget("Еда", new BigDecimal("4000")));
         wallet.setBudget(new Budget("Развлечения", new BigDecimal("3000")));
         wallet.setBudget(new Budget("Коммунальные услуги", new BigDecimal("2500")));
+    }
+
+    public static Wallet wallet(String owner) {
+        Wallet wallet = new Wallet(owner);
+        populate(wallet);
+        return wallet;
     }
 
     private static void add(

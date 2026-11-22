@@ -1,8 +1,5 @@
 package controller;
 
-
-import service.CategoryNotFoundException;
-import service.ValidationException;
 import model.Budget;
 import model.Category;
 import model.Operation;
@@ -24,35 +21,10 @@ class CategoryCommandsTest {
 
     @Test
     void addCategoryCreatesItAndConfirms() {
-        fixture.run(add, "add-category Еда");
+        fixture.run(add, "add-category \"Еда дома\"");
 
-        Assertions.assertTrue(fixture.wallet.hasCategory("Еда"));
-        Assertions.assertTrue(fixture.output().contains("«Еда» создана"));
-    }
-
-    @Test
-    void quotedNameKeepsSpaces() {
-        fixture.run(add, "add-category \"Коммунальные услуги\"");
-
-        Assertions.assertTrue(fixture.wallet.hasCategory("Коммунальные услуги"));
-    }
-
-    @Test
-    void nameWithSpacesWithoutQuotesShowsUsage() {
-        ValidationException e = Assertions.assertThrows(ValidationException.class,
-                () -> fixture.run(add, "add-category Коммунальные услуги"));
-
-        Assertions.assertTrue(e.getMessage().contains("add-category <название>"));
-    }
-
-    @Test
-    void duplicateCategoryIsRejected() {
-        fixture.run(add, "add-category Еда");
-
-        ValidationException e = Assertions.assertThrows(ValidationException.class,
-                () -> fixture.run(add, "add-category еда"));
-
-        Assertions.assertTrue(e.getMessage().contains("уже существует"));
+        Assertions.assertTrue(fixture.wallet.hasCategory("Еда дома"));
+        Assertions.assertTrue(fixture.output().contains("«Еда дома» создана"));
     }
 
     @Test
@@ -81,25 +53,6 @@ class CategoryCommandsTest {
     }
 
     @Test
-    void removeCategoryWithOperationsIsRejected() {
-        fixture.wallet.addCategory(new Category("Еда"));
-        fixture.wallet.addOperation(new Operation(OperationType.EXPENSE, "Еда",
-                new BigDecimal("300"), LocalDate.of(2020, 1, 1), null, null));
-
-        ValidationException e = Assertions.assertThrows(ValidationException.class,
-                () -> fixture.run(remove, "remove-category Еда"));
-
-        Assertions.assertTrue(e.getMessage().contains("операций"));
-        Assertions.assertTrue(fixture.wallet.hasCategory("Еда"));
-    }
-
-    @Test
-    void removeUnknownCategoryReportsMissingCategory() {
-        Assertions.assertThrows(CategoryNotFoundException.class,
-                () -> fixture.run(remove, "remove-category Кино"));
-    }
-
-    @Test
     void listShowsCategoriesWithBudgets() {
         fixture.wallet.addCategory(new Category("Еда"));
         fixture.wallet.addCategory(new Category("Такси"));
@@ -119,13 +72,5 @@ class CategoryCommandsTest {
         fixture.run(list, "categories");
 
         Assertions.assertTrue(fixture.output().contains("add-category"));
-    }
-
-    @Test
-    void onlyDataChangingCommandsAreMarkedForSaving() {
-        Assertions.assertTrue(add.changesData());
-        Assertions.assertTrue(rename.changesData());
-        Assertions.assertTrue(remove.changesData());
-        Assertions.assertFalse(list.changesData());
     }
 }

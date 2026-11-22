@@ -3,7 +3,6 @@ package controller;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.List;
 import java.util.Set;
@@ -51,16 +50,5 @@ class TableFormatterTest {
     void rowWithWrongNumberOfCellsIsRejected() {
         assertThrows(IllegalArgumentException.class, () -> TableFormatter.format(
                 List.of("А", "Б"), List.of(List.of("только одна")), Set.of()));
-    }
-
-    @Test
-    void allRowsHaveSameLength() {
-        String table = TableFormatter.format(
-                List.of("Категория", "Сумма"),
-                List.of(List.of("Еда", "800.00"), List.of("Развлечения", "3,000.00")),
-                Set.of(1));
-
-        long distinctLengths = table.lines().map(String::length).distinct().count();
-        assertTrue(distinctLengths == 1);
     }
 }

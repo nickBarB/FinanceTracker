@@ -16,7 +16,7 @@ import org.junit.jupiter.params.provider.ValueSource;
 
 class OperationTest {
 
-    private static final LocalDate TODAY = LocalDate.now();
+    private static final LocalDate TODAY = LocalDate.of(2020, 1, 5);
 
     private static Operation expense(String category, BigDecimal amount, LocalDate date) {
         return new Operation(OperationType.EXPENSE, category, amount, date, null, null);
@@ -24,16 +24,14 @@ class OperationTest {
 
     @Test
     void createsValidOperationWithTwoDecimals() {
-        Operation op = expense("Еда", new BigDecimal("300"), TODAY);
+        Operation op = expense("  Еда ", new BigDecimal("300"), TODAY);
 
         assertEquals(OperationType.EXPENSE, op.type());
+        assertEquals("Еда", op.category());
+        assertEquals("", op.description());
+        assertFalse(op.isTransfer());
         assertEquals(new BigDecimal("300.00"), op.amount());
         assertEquals(TODAY, op.date());
-    }
-
-    @Test
-    void trimsCategory() {
-        assertEquals("Еда", expense("  Еда ", BigDecimal.TEN, TODAY).category());
     }
 
     @ParameterizedTest
@@ -69,21 +67,11 @@ class OperationTest {
     }
 
     @Test
-    void nullDescriptionBecomesEmpty() {
-        assertEquals("", expense("Еда", BigDecimal.TEN, TODAY).description());
-    }
-
-    @Test
     void operationWithCounterpartyIsTransfer() {
         Operation op = new Operation(
                 OperationType.EXPENSE, "Перевод", BigDecimal.TEN, TODAY, "", "boris");
 
         assertTrue(op.isTransfer());
-    }
-
-    @Test
-    void operationWithoutCounterpartyIsNotTransfer() {
-        assertFalse(expense("Еда", BigDecimal.TEN, TODAY).isTransfer());
     }
 
     @Test

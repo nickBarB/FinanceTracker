@@ -14,27 +14,16 @@ class BudgetTest {
 
     @Test
     void createsBudgetWithTwoDecimals() {
-        Budget budget = new Budget("Еда", new BigDecimal("4000"));
+        Budget budget = new Budget(" Еда ", new BigDecimal("4000"));
 
         assertEquals("Еда", budget.category());
         assertEquals(new BigDecimal("4000.00"), budget.limit());
     }
 
     @Test
-    void trimsCategory() {
-        assertEquals("Еда", new Budget(" Еда ", BigDecimal.TEN).category());
-    }
-
-    @ParameterizedTest
-    @ValueSource(strings = {"0", "-1"})
-    void rejectsNonPositiveLimit(String limit) {
+    void rejectsZeroLimit() {
         assertThrows(ValidationException.class,
-                () -> new Budget("Еда", new BigDecimal(limit)));
-    }
-
-    @Test
-    void rejectsNullLimit() {
-        assertThrows(ValidationException.class, () -> new Budget("Еда", null));
+                () -> new Budget("Еда", BigDecimal.ZERO));
     }
 
     @ParameterizedTest

@@ -27,7 +27,7 @@ class WalletTest {
     }
 
     private static Operation op(OperationType type, String category, String amount) {
-        return new Operation(type, category, new BigDecimal(amount), LocalDate.now(), null, null);
+        return new Operation(type, category, new BigDecimal(amount), LocalDate.of(2020, 1, 5), null, null);
     }
 
     @Test

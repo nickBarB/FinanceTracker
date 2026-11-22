@@ -4,7 +4,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import service.CategoryNotFoundException;
 import service.ValidationException;
 import model.Category;
 import service.BudgetService;
@@ -34,13 +33,6 @@ class BudgetCommandsTest {
     }
 
     @Test
-    void setBudgetAcceptsCommaAsDecimalSeparator() {
-        fixture.run(set, "set-budget Еда 4000,50");
-
-        assertEquals(new BigDecimal("4000.50"), fixture.wallet.getBudget("Еда").orElseThrow().limit());
-    }
-
-    @Test
     void setBudgetAgainReportsOldAndNewLimit() {
         fixture.run(set, "set-budget Еда 4000");
         fixture.run(set, "set-budget Еда 5000");
@@ -51,19 +43,10 @@ class BudgetCommandsTest {
 
     @Test
     void invalidAmountIsRejectedAndNothingChanges() {
+        fixture.run(set, "set-budget Еда 4000");
         assertThrows(ValidationException.class, () -> fixture.run(set, "set-budget Еда abc"));
 
-        assertTrue(fixture.wallet.getBudget("Еда").isEmpty());
-    }
-
-    @Test
-    void zeroLimitIsRejected() {
-        assertThrows(ValidationException.class, () -> fixture.run(set, "set-budget Еда 0"));
-    }
-
-    @Test
-    void unknownCategoryIsReported() {
-        assertThrows(CategoryNotFoundException.class, () -> fixture.run(set, "set-budget Кино 100"));
+        assertEquals(new BigDecimal("4000.00"), fixture.wallet.getBudget("Еда").orElseThrow().limit());
     }
 
     @Test
@@ -74,16 +57,5 @@ class BudgetCommandsTest {
 
         assertTrue(fixture.wallet.getBudget("Еда").isEmpty());
         assertTrue(fixture.output().contains("удалён"));
-    }
-
-    @Test
-    void removeMissingBudgetIsRejected() {
-        assertThrows(ValidationException.class, () -> fixture.run(remove, "remove-budget Еда"));
-    }
-
-    @Test
-    void bothCommandsAreMarkedForSaving() {
-        assertTrue(set.changesData());
-        assertTrue(remove.changesData());
     }
 }

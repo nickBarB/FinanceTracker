@@ -134,15 +134,8 @@ class NotificationServiceTest {
     }
 
     @Test
-    void currentStateForAssignmentExample() {
-        add(OperationType.EXPENSE, "Еда", "300");
-        add(OperationType.EXPENSE, "Еда", "500");
-        add(OperationType.EXPENSE, "Развлечения", "3000");
-        add(OperationType.EXPENSE, "Коммунальные услуги", "3000");
-        add(OperationType.EXPENSE, "Такси", "1500");
-        add(OperationType.INCOME, "Зарплата", "20000");
-        add(OperationType.INCOME, "Зарплата", "40000");
-        add(OperationType.INCOME, "Зарплата", "3000");
+    void currentStateIncludesAllBudgetAlerts() {
+        wallet = support.FinancialFixtures.wallet("anna");
 
         assertEquals(
                 List.of(NotificationType.BUDGET_NEAR_LIMIT, NotificationType.BUDGET_EXCEEDED),

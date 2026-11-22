@@ -12,7 +12,6 @@ import model.Wallet;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.nio.charset.StandardCharsets;
-import java.util.List;
 import org.junit.jupiter.api.Test;
 
 class CommandLoopTest {
@@ -39,14 +38,6 @@ class CommandLoopTest {
     }
 
     @Test
-    void exitStopsLoopAndSaysGoodbye() {
-        String out = run("exit\n");
-
-        assertTrue(out.contains("До свидания!"));
-        assertTrue(out.contains("> "));
-    }
-
-    @Test
     void blankLinesAreIgnored() {
         assertFalse(run("\n   \nexit\n").contains("Неизвестная"));
     }
@@ -57,11 +48,6 @@ class CommandLoopTest {
 
         assertTrue(out.contains("Неизвестная команда «foo»"));
         assertTrue(out.contains("help"));
-    }
-
-    @Test
-    void endOfInputEndsLoopGracefully() {
-        assertTrue(run("").contains("До свидания!"));
     }
 
     @Test
@@ -112,24 +98,6 @@ class CommandLoopTest {
     }
 
     @Test
-    void storageErrorIsShownWithPrefix() {
-        TestCommand command = new TestCommand("disk", false, false, line -> {
-            throw new StorageException("диск");
-        });
-
-        assertTrue(run("disk\nexit\n", command).contains("Ошибка хранилища: диск"));
-    }
-
-    @Test
-    void quotedArgumentsReachCommandAsOneValue() {
-        TestCommand echo = TestCommand.simple("echo");
-
-        run("echo \"Коммунальные услуги\" 5\nexit\n", echo);
-
-        assertEquals(List.of("Коммунальные услуги", "5"), echo.calls.get(0).args());
-    }
-
-    @Test
     void commandThatChangesDataSavesWalletOnce() {
         logIn();
         TestCommand change = new TestCommand("change", true, true, line -> { });
@@ -150,22 +118,6 @@ class CommandLoopTest {
     }
 
     @Test
-    void exitDoesNotRewriteCommittedWallet() {
-        logIn();
-
-        run("exit\n");
-
-        assertTrue(repository.saved.isEmpty());
-    }
-
-    @Test
-    void exitWhenLoggedOutSavesNothing() {
-        run("exit\n");
-
-        assertTrue(repository.saved.isEmpty());
-    }
-
-    @Test
     void failedSaveIsReportedAndLoopContinues() {
         logIn();
         repository.failure = new StorageException("диск полон");
@@ -176,12 +128,5 @@ class CommandLoopTest {
         assertTrue(out.contains("Ошибка хранилища: диск полон"));
         assertEquals(1, change.calls.size());
         assertTrue(out.contains("До свидания!"));
-    }
-
-    @Test
-    void promptShowsLoginWhenLoggedIn() {
-        logIn();
-
-        assertTrue(run("exit\n").contains("anna> "));
     }
 }

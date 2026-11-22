@@ -20,7 +20,7 @@ import org.junit.jupiter.api.Test;
 
 class JsonWalletFormatTest {
 
-    private final JsonWalletFormat format = new JsonWalletFormat(libs.json.JsonCodec.create());
+    private final JsonWalletFormat format = new JsonWalletFormat(libs.json.JsonCodec.create(), support.TestClock.CLOCK);
 
     private static Wallet wallet() {
         Wallet wallet = new Wallet("anna");

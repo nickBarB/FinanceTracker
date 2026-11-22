@@ -4,9 +4,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import model.Category;
-import model.Operation;
-import model.OperationType;
 import model.Wallet;
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -22,23 +19,7 @@ class StatisticsServiceTest {
     @BeforeEach
     void setUp() {
         service = new StatisticsService();
-        wallet = new Wallet("anna");
-        for (String name : new String[] {
-                "Еда", "Развлечения", "Коммунальные услуги", "Такси", "Зарплата", "Бонус"}) {
-            wallet.addCategory(new Category(name));
-        }
-        add(OperationType.EXPENSE, "Еда", "300", d(1, 5));
-        add(OperationType.EXPENSE, "Еда", "500", d(2, 5));
-        add(OperationType.EXPENSE, "Развлечения", "3000", d(1, 20));
-        add(OperationType.EXPENSE, "Коммунальные услуги", "3000", d(2, 10));
-        add(OperationType.EXPENSE, "Такси", "1500", d(2, 20));
-        add(OperationType.INCOME, "Зарплата", "20000", d(1, 1));
-        add(OperationType.INCOME, "Зарплата", "40000", d(2, 1));
-        add(OperationType.INCOME, "Бонус", "3000", d(2, 15));
-    }
-
-    private void add(OperationType type, String category, String amount, LocalDate date) {
-        wallet.addOperation(new Operation(type, category, new BigDecimal(amount), date, null, null));
+        wallet = support.FinancialFixtures.wallet("anna");
     }
 
     private static LocalDate d(int month, int day) {
@@ -50,7 +31,7 @@ class StatisticsServiceTest {
     }
 
     @Test
-    void totalsForAllOperationsMatchAssignmentExample() {
+    void totalsIncludeAllOperations() {
         assertEquals(money("63000.00"), service.totalIncome(wallet, OperationFilter.all()));
         assertEquals(money("8300.00"), service.totalExpense(wallet, OperationFilter.all()));
         assertEquals(8, service.select(wallet, OperationFilter.all()).size());

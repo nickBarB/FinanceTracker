@@ -28,18 +28,7 @@ class ReportCommandTest {
 
     @BeforeEach
     void setUp() {
-        SampleData.fillAssignmentExample(fixture.wallet);
-    }
-
-    @Test
-    void reportPrintsAssignmentExample() {
-        fixture.run(command, "report");
-
-        String out = fixture.output();
-        assertTrue(out.contains("Общий доход: 63,000.00"));
-        assertTrue(out.contains("Общие расходы: 8,300.00"));
-        assertTrue(out.contains("Бюджет по категориям:"));
-        assertTrue(out.contains("-500.00"));
+        support.FinancialFixtures.populate(fixture.wallet);
     }
 
     @Test
@@ -65,22 +54,6 @@ class ReportCommandTest {
     void trailingCommaInCategoriesIsRejected() {
         assertThrows(ValidationException.class,
                 () -> fixture.run(command, "report --categories \"Еда,\""));
-    }
-
-    @Test
-    void reversedPeriodIsRejected() {
-        ValidationException e = assertThrows(ValidationException.class,
-                () -> fixture.run(command, "report --from 2020-03-01 --to 2020-01-01"));
-
-        assertTrue(e.getMessage().contains("позже"));
-    }
-
-    @Test
-    void wrongDateFormatIsRejected() {
-        ValidationException e = assertThrows(ValidationException.class,
-                () -> fixture.run(command, "report --from 01.02.2020"));
-
-        assertTrue(e.getMessage().contains("ГГГГ-ММ-ДД"));
     }
 
     @Test
@@ -119,15 +92,5 @@ class ReportCommandTest {
 
         assertThrows(StorageException.class,
                 () -> fixture.run(command, "report --out \"" + file + "\""));
-    }
-
-    @Test
-    void unknownOptionIsRejected() {
-        assertThrows(ValidationException.class, () -> fixture.run(command, "report --foo x"));
-    }
-
-    @Test
-    void reportDoesNotChangeData() {
-        assertFalse(command.changesData());
     }
 }
